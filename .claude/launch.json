@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "/Users/ym/.local/bin/fnm",
+      "runtimeArgs": ["exec", "--", "npx", "vite", "--host"],
+      "port": 5173
+    }
+  ]
+}
