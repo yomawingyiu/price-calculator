@@ -29,16 +29,16 @@ function App() {
 
   return (
     <Layout>
-      <Dashboard products={products} />
+      {!showForm && <Dashboard products={products} />}
 
-      <div className="flex items-center gap-8 mb-12 pb-4 border-b" style={{ borderColor: '#E8E4DC' }}>
+      {/* Action bar */}
+      <div className="flex items-center gap-4 mb-6 flex-wrap">
         {!showForm && (
           <button
             onClick={() => { setEditProduct(null); setShowForm(true); }}
-            className="text-[10px] uppercase tracking-[0.25em] border-b pb-1 hover:opacity-60 transition-opacity"
-            style={{ borderColor: '#1A1A1A', color: '#1A1A1A' }}
+            className="btn-primary"
           >
-            + New Entry / 新增產品
+            + New Product · 新增產品
           </button>
         )}
         <div className="ml-auto">
@@ -55,7 +55,7 @@ function App() {
         />
       )}
 
-      <ProductList products={products} onEdit={handleEdit} onDelete={handleDelete} />
+      {!showForm && <ProductList products={products} onEdit={handleEdit} onDelete={handleDelete} />}
     </Layout>
   );
 }

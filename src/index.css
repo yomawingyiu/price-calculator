@@ -1,9 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 :root {
   --bg: #FAFAF7;
   --bg-card: #FFFFFF;
+  --bg-alt: #F5F1E8;
   --ink: #1A1A1A;
   --ink-soft: #4A4A48;
   --muted: #8B8580;
@@ -11,6 +12,8 @@
   --line-soft: #F0EDE6;
   --accent: #B85432;
   --accent-soft: #F5EDE8;
+  --positive: #5C8A6E;
+  --warning: #C4923B;
 }
 
 html, body {
@@ -22,19 +25,28 @@ html, body {
   color: #1A1A1A;
   color-scheme: light;
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv11", "ss01";
   letter-spacing: -0.005em;
 }
 
 .font-serif {
-  font-family: 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  font-family: 'Cormorant Garamond', Georgia, serif;
   font-feature-settings: "liga", "dlig";
 }
 
 .font-mono {
   font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+  font-feature-settings: "tnum", "zero";
 }
 
-/* Refined focus state */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Inputs */
+input, select, textarea, button {
+  font-family: inherit;
+}
 input:focus, select:focus, textarea:focus, button:focus {
   outline: none;
 }
@@ -42,20 +54,84 @@ input:focus, select:focus, textarea:focus {
   border-color: #1A1A1A !important;
 }
 
-/* Subtle button transitions */
+/* Data entry inputs */
+.input-field {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #E8E4DC;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #1A1A1A;
+  transition: all 0.15s ease;
+  border-radius: 2px;
+}
+.input-field:hover {
+  border-color: #8B8580;
+}
+.input-field:focus {
+  border-color: #1A1A1A !important;
+  background-color: #FFFFFF;
+}
+.input-field::placeholder {
+  color: #C7C0B8;
+}
+
+/* Select specific */
+.input-field[type="select"], select.input-field {
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+}
+
+/* Button base */
 button {
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Soft underline for links/buttons */
-.bh-btn {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+.btn-primary {
+  background: #1A1A1A;
+  color: #FFFFFF;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid #1A1A1A;
+  border-radius: 2px;
+  cursor: pointer;
 }
-.bh-btn:hover {
-  opacity: 0.7;
+.btn-primary:hover {
+  background: #B85432;
+  border-color: #B85432;
 }
 
-/* Hide number input arrows */
+.btn-secondary {
+  background: transparent;
+  color: #1A1A1A;
+  padding: 10px 20px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid #E8E4DC;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.btn-secondary:hover {
+  border-color: #1A1A1A;
+  background: #FAFAF7;
+}
+
+/* Small caps label */
+.label-xs {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #8B8580;
+}
+
+/* Number inputs */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
@@ -65,13 +141,50 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* Editorial small caps */
-.small-caps {
-  font-variant: small-caps;
-  letter-spacing: 0.15em;
+/* Scrollbar (subtle) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #E8E4DC;
+  border-radius: 5px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C7C0B8;
 }
 
-/* Hairline border helper */
-.border-hair {
-  border-color: #E8E4DC;
+/* Sticky table header shadow */
+.table-sticky thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #FAFAF7;
+}
+
+/* Segmented control */
+.seg {
+  display: inline-flex;
+  border: 1px solid #E8E4DC;
+  border-radius: 2px;
+  padding: 2px;
+  background: #FFFFFF;
+}
+.seg button {
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #8B8580;
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+}
+.seg button[data-active="true"] {
+  background: #1A1A1A;
+  color: #FFFFFF;
 }

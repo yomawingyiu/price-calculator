@@ -17,11 +17,6 @@ const LEATHER_PRICE_DEFAULTS: Record<LeatherType, number> = {
   '其他': 0,
 };
 
-const inputCls = "w-full bg-transparent border-b py-2 px-1 text-sm font-mono focus:bg-stone-50/50 transition-colors";
-const inputStyle = { borderColor: '#E8E4DC', color: '#1A1A1A' };
-const labelCls = "block text-[10px] uppercase tracking-[0.2em] mb-2";
-const labelStyle = { color: '#8B8580' };
-
 export function ProductForm({ editProduct, onSave, onUpdate, onCancel }: Props) {
   const [nameEn, setNameEn] = useState('');
   const [nameCn, setNameCn] = useState('');
@@ -59,6 +54,8 @@ export function ProductForm({ editProduct, onSave, onUpdate, onCancel }: Props) 
   const price = retailPrice(costs, pricing);
   const discPrice = discountedPrice(price, pricing.discountRate);
   const margin = profitMargin(costs, pricing);
+  const profit = price - total;
+  const actualMultiplier = total > 0 ? price / total : 0;
 
   const updateCost = (key: keyof CostBreakdown, value: string) => {
     setCosts(prev => ({ ...prev, [key]: parseFloat(value) || 0 }));
@@ -114,416 +111,609 @@ export function ProductForm({ editProduct, onSave, onUpdate, onCancel }: Props) 
     onCancel();
   };
 
-  const costField = (label: string, key: keyof CostBreakdown, suffix?: string) => (
-    <div>
-      <label className={labelCls} style={labelStyle}>{label}</label>
-      <div className="flex items-baseline gap-1">
-        {!suffix && <span className="text-xs font-serif italic" style={{ color: '#8B8580' }}>$</span>}
-        <input
-          type="number" min="0" step="0.1"
-          value={costs[key] || ''}
-          placeholder="—"
-          onChange={e => updateCost(key, e.target.value)}
-          className={inputCls}
-          style={inputStyle}
-        />
-        {suffix && <span className="text-[10px] uppercase whitespace-nowrap" style={{ color: '#8B8580' }}>{suffix}</span>}
-      </div>
-    </div>
-  );
-
   const areaCm2 = leatherLengthCm * leatherWidthCm;
   const areaSqFt = areaCm2 > 0 ? areaCm2 / 929.03 : 0;
 
+  const marginColor = margin >= 0.7 ? '#1A1A1A' : margin >= 0.5 ? '#C4923B' : '#B85432';
+  const marginStatus = margin >= 0.7 ? 'HEALTHY' : margin >= 0.5 ? 'ACCEPTABLE' : 'LOW';
+
   return (
-    <form onSubmit={handleSubmit} className="mb-12 pb-12 border-b" style={{ borderColor: '#E8E4DC' }}>
-      {/* Editorial section header */}
-      <div className="flex items-baseline gap-4 mb-10">
-        <span className="text-[10px] uppercase tracking-[0.3em]" style={{ color: '#8B8580' }}>
-          № 02
-        </span>
-        <div className="h-px flex-1" style={{ backgroundColor: '#E8E4DC' }} />
-        <h2 className="font-serif text-2xl italic font-light" style={{ color: editProduct ? '#B85432' : '#1A1A1A' }}>
-          {editProduct ? 'Editing' : 'New Entry'}
-        </h2>
+    <form onSubmit={handleSubmit} className="mb-8">
+      {/* Editor header */}
+      <div className="flex items-baseline justify-between mb-4">
+        <div>
+          <div className="label-xs mb-1">{editProduct ? 'Editing Entry' : 'New Entry'}</div>
+          <h2 className="font-serif text-2xl" style={{ color: '#1A1A1A' }}>
+            <em>{editProduct ? 'Edit Product' : 'Add Product'}</em>{' '}
+            <span className="text-sm" style={{ color: '#8B8580' }}>· {editProduct ? '編輯產品' : '新增產品'}</span>
+          </h2>
+        </div>
+        <button
+          type="button"
+          onClick={resetForm}
+          className="text-[10px] tracking-wider hover:underline"
+          style={{ color: '#8B8580' }}
+        >
+          × CANCEL / 取消
+        </button>
       </div>
 
-      {/* Section: Basic Info */}
-      <div className="mb-12">
-        <div className="text-[10px] uppercase tracking-[0.2em] mb-6" style={{ color: '#8B8580' }}>
-          i. Identity / 基本資料
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          <div>
-            <label className={labelCls} style={labelStyle}>產品名稱（中文）*</label>
-            <input
-              required
-              value={nameCn}
-              onChange={e => setNameCn(e.target.value)}
-              placeholder="維度卡片套"
-              className="w-full bg-transparent border-b py-2 px-1 font-serif text-lg italic placeholder:text-stone-300"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label className={labelCls} style={labelStyle}>Product Name (EN)</label>
-            <input
-              value={nameEn}
-              onChange={e => setNameEn(e.target.value)}
-              placeholder="D2 Cardholder"
-              className="w-full bg-transparent border-b py-2 px-1 font-serif text-lg italic placeholder:text-stone-300"
-              style={inputStyle}
-            />
-          </div>
-          <div>
-            <label className={labelCls} style={labelStyle}>SKU</label>
-            <input
-              value={sku}
-              onChange={e => setSku(e.target.value)}
-              placeholder="APD2"
-              className="w-full bg-transparent border-b py-2 px-1 font-mono text-sm placeholder:text-stone-300"
-              style={inputStyle}
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls} style={labelStyle}>類別</label>
-              <select
-                value={category}
-                onChange={e => setCategory(e.target.value as ProductCategory)}
-                className="w-full bg-transparent border-b py-2 px-1 text-sm"
-                style={inputStyle}
-              >
-                {PRODUCT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
-              </select>
+      {/* Split layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT: Form */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Identity card */}
+          <div
+            className="border rounded-sm p-5"
+            style={{ borderColor: '#E8E4DC', backgroundColor: '#FFFFFF' }}
+          >
+            <div className="flex items-baseline justify-between mb-4">
+              <div className="label-xs">① Identity · 基本資料</div>
+              <div className="text-[10px]" style={{ color: '#8B8580' }}>* required</div>
             </div>
-            <div>
-              <label className={labelCls} style={labelStyle}>皮料</label>
-              <select
-                value={leatherType}
-                onChange={e => handleLeatherTypeChange(e.target.value as LeatherType)}
-                className="w-full bg-transparent border-b py-2 px-1 text-sm"
-                style={inputStyle}
-              >
-                {LEATHER_TYPES.map(t => <option key={t}>{t}</option>)}
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Section: Costs */}
-      <div className="mb-12">
-        <div className="text-[10px] uppercase tracking-[0.2em] mb-6" style={{ color: '#8B8580' }}>
-          ii. Composition of Cost / 成本明細
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
-          {costField('Labor / 手工費', 'laborCost')}
-          {costField('Hardware / 五金', 'hardwareCost')}
-          {costField('Packaging / 包裝', 'packagingCost')}
-          {costField('Shipping / 運費', 'shippingCost')}
-        </div>
-
-        {/* Leather block — minimal frame */}
-        {(isAppleLeather || isGoatLeather) && (
-          <div className="border-l-2 pl-6 py-2" style={{ borderColor: '#B85432' }}>
-            <div className="flex items-baseline gap-3 mb-6">
-              <span className="font-serif text-xl italic font-light" style={{ color: '#1A1A1A' }}>
-                {isAppleLeather ? 'Apple Leather' : 'Italian Goatskin'}
-              </span>
-              <span className="text-[10px] uppercase tracking-[0.2em]" style={{ color: '#8B8580' }}>
-                — {leatherType}
-              </span>
-            </div>
-
-            <div className="text-[10px] italic mb-5" style={{ color: '#8B8580' }}>
-              ⌗ Enter dimensions to compute leather cost automatically
-            </div>
-
-            {/* CM Calculator */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-              <div>
-                <label className={labelCls} style={labelStyle}>長 Length (cm)</label>
-                <input type="number" min="0" step="0.1"
-                  value={leatherLengthCm || ''}
-                  placeholder="—"
-                  onChange={e => {
-                    const v = parseFloat(e.target.value) || 0;
-                    setLeatherLengthCm(v);
-                    calcLeatherFromCm(v, leatherWidthCm, leatherPricePerSqFt);
-                  }}
-                  className={inputCls}
-                  style={inputStyle} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Field label="產品名稱（中文）" required>
+                <input
+                  required
+                  value={nameCn}
+                  onChange={e => setNameCn(e.target.value)}
+                  placeholder="例：維度卡片套"
+                  className="input-field"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                />
+              </Field>
+              <Field label="Product Name (EN)">
+                <input
+                  value={nameEn}
+                  onChange={e => setNameEn(e.target.value)}
+                  placeholder="e.g. D2 Cardholder"
+                  className="input-field"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                />
+              </Field>
+              <Field label="SKU">
+                <input
+                  value={sku}
+                  onChange={e => setSku(e.target.value)}
+                  placeholder="APD2"
+                  className="input-field"
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Category 類別">
+                  <select
+                    value={category}
+                    onChange={e => setCategory(e.target.value as ProductCategory)}
+                    className="input-field"
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  >
+                    {PRODUCT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </Field>
+                <Field label="Leather 皮料">
+                  <select
+                    value={leatherType}
+                    onChange={e => handleLeatherTypeChange(e.target.value as LeatherType)}
+                    className="input-field"
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  >
+                    {LEATHER_TYPES.map(t => <option key={t}>{t}</option>)}
+                  </select>
+                </Field>
               </div>
-              <div>
-                <label className={labelCls} style={labelStyle}>寬 Width (cm)</label>
-                <input type="number" min="0" step="0.1"
-                  value={leatherWidthCm || ''}
-                  placeholder="—"
-                  onChange={e => {
-                    const v = parseFloat(e.target.value) || 0;
-                    setLeatherWidthCm(v);
-                    calcLeatherFromCm(leatherLengthCm, v, leatherPricePerSqFt);
-                  }}
-                  className={inputCls}
-                  style={inputStyle} />
+            </div>
+          </div>
+
+          {/* Cost breakdown */}
+          <div
+            className="border rounded-sm p-5"
+            style={{ borderColor: '#E8E4DC', backgroundColor: '#FFFFFF' }}
+          >
+            <div className="label-xs mb-4">② Cost Breakdown · 成本明細</div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Field label="Labor · 手工費" prefix="$">
+                <input
+                  type="number" min="0" step="0.1"
+                  value={costs.laborCost || ''}
+                  placeholder="0"
+                  onChange={e => updateCost('laborCost', e.target.value)}
+                  className="input-field"
+                />
+              </Field>
+              <Field label="Hardware · 五金" prefix="$">
+                <input
+                  type="number" min="0" step="0.1"
+                  value={costs.hardwareCost || ''}
+                  placeholder="0"
+                  onChange={e => updateCost('hardwareCost', e.target.value)}
+                  className="input-field"
+                />
+              </Field>
+              <Field label="Packaging · 包裝" prefix="$">
+                <input
+                  type="number" min="0" step="0.1"
+                  value={costs.packagingCost || ''}
+                  placeholder="0"
+                  onChange={e => updateCost('packagingCost', e.target.value)}
+                  className="input-field"
+                />
+              </Field>
+              <Field label="Shipping · 運費" prefix="$">
+                <input
+                  type="number" min="0" step="0.1"
+                  value={costs.shippingCost || ''}
+                  placeholder="0"
+                  onChange={e => updateCost('shippingCost', e.target.value)}
+                  className="input-field"
+                />
+              </Field>
+            </div>
+          </div>
+
+          {/* Leather cost */}
+          {(isAppleLeather || isGoatLeather) && (
+            <div
+              className="border rounded-sm p-5"
+              style={{ borderColor: '#E8E4DC', backgroundColor: '#FFFFFF' }}
+            >
+              <div className="flex items-baseline justify-between mb-4">
+                <div>
+                  <div className="label-xs mb-1">③ {isAppleLeather ? 'Apple Leather' : 'Italian Goatskin'} · 皮料</div>
+                  <div className="font-serif text-sm italic" style={{ color: '#8B8580' }}>{leatherType}</div>
+                </div>
+                <div
+                  className="text-[10px] px-2 py-1 rounded-sm"
+                  style={{ backgroundColor: '#F5EDE8', color: '#B85432' }}
+                >
+                  AUTO-CALCULATE FROM CM
+                </div>
               </div>
-              <div>
-                <label className={labelCls} style={labelStyle}>單價 Price / ft²</label>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-xs font-serif italic" style={{ color: '#8B8580' }}>$</span>
-                  <input type="number" min="0" step="0.1"
+
+              {/* CM Calculator row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <Field label="Length · 長" suffix="cm">
+                  <input
+                    type="number" min="0" step="0.1"
+                    value={leatherLengthCm || ''}
+                    placeholder="0"
+                    onChange={e => {
+                      const v = parseFloat(e.target.value) || 0;
+                      setLeatherLengthCm(v);
+                      calcLeatherFromCm(v, leatherWidthCm, leatherPricePerSqFt);
+                    }}
+                    className="input-field"
+                  />
+                </Field>
+                <Field label="Width · 寬" suffix="cm">
+                  <input
+                    type="number" min="0" step="0.1"
+                    value={leatherWidthCm || ''}
+                    placeholder="0"
+                    onChange={e => {
+                      const v = parseFloat(e.target.value) || 0;
+                      setLeatherWidthCm(v);
+                      calcLeatherFromCm(leatherLengthCm, v, leatherPricePerSqFt);
+                    }}
+                    className="input-field"
+                  />
+                </Field>
+                <Field label="Price / ft²" prefix="$">
+                  <input
+                    type="number" min="0" step="0.1"
                     value={leatherPricePerSqFt || ''}
                     onChange={e => {
                       const v = parseFloat(e.target.value) || 0;
                       setLeatherPricePerSqFt(v);
                       calcLeatherFromCm(leatherLengthCm, leatherWidthCm, v);
                     }}
-                    className={inputCls}
-                    style={inputStyle} />
+                    className="input-field"
+                  />
+                </Field>
+                <Field label="Area · 面積">
+                  <div
+                    className="input-field flex items-baseline gap-1"
+                    style={{
+                      backgroundColor: areaSqFt > 0 ? '#F5EDE8' : '#FAFAF7',
+                      color: areaSqFt > 0 ? '#B85432' : '#C7C0B8',
+                      borderColor: areaSqFt > 0 ? '#B85432' : '#E8E4DC',
+                    }}
+                  >
+                    <span className="font-mono tabular font-semibold">
+                      {areaSqFt > 0 ? areaSqFt.toFixed(3) : '—'}
+                    </span>
+                    <span className="text-[10px]">ft²</span>
+                  </div>
+                </Field>
+              </div>
+
+              {/* Manual override */}
+              <div className="pt-4 border-t" style={{ borderColor: '#F0EDE6' }}>
+                <div className="text-[10px] mb-3 tracking-wider" style={{ color: '#8B8580' }}>
+                  MANUAL OVERRIDE · 手動覆寫
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {isAppleLeather ? (
+                    <>
+                      <Field label="Qty · 數量" suffix="ft²">
+                        <input
+                          type="number" min="0" step="0.001"
+                          value={costs.leatherQtyApple || ''}
+                          placeholder="0"
+                          onChange={e => updateCost('leatherQtyApple', e.target.value)}
+                          className="input-field"
+                        />
+                      </Field>
+                      <Field label="Cost · 成本" prefix="$">
+                        <input
+                          type="number" min="0" step="0.1"
+                          value={costs.leatherCostApple || ''}
+                          placeholder="0"
+                          onChange={e => updateCost('leatherCostApple', e.target.value)}
+                          className="input-field"
+                        />
+                      </Field>
+                    </>
+                  ) : (
+                    <>
+                      <Field label="Qty · 數量" suffix="ft²">
+                        <input
+                          type="number" min="0" step="0.001"
+                          value={costs.leatherQtyGoat || ''}
+                          placeholder="0"
+                          onChange={e => updateCost('leatherQtyGoat', e.target.value)}
+                          className="input-field"
+                        />
+                      </Field>
+                      <Field label="Cost · 成本" prefix="$">
+                        <input
+                          type="number" min="0" step="0.1"
+                          value={costs.leatherCostGoat || ''}
+                          placeholder="0"
+                          onChange={e => updateCost('leatherCostGoat', e.target.value)}
+                          className="input-field"
+                        />
+                      </Field>
+                    </>
+                  )}
                 </div>
               </div>
+            </div>
+          )}
+
+          {isOtherLeather && (
+            <div
+              className="border rounded-sm p-5"
+              style={{ borderColor: '#E8E4DC', backgroundColor: '#FFFFFF' }}
+            >
+              <div className="label-xs mb-4">③ Other Material · 其他皮料</div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field label="Qty · 數量" suffix="ft²">
+                  <input
+                    type="number" min="0" step="0.001"
+                    value={costs.leatherQtyApple || ''}
+                    placeholder="0"
+                    onChange={e => updateCost('leatherQtyApple', e.target.value)}
+                    className="input-field"
+                  />
+                </Field>
+                <Field label="Cost · 成本" prefix="$">
+                  <input
+                    type="number" min="0" step="0.1"
+                    value={costs.leatherCostApple || ''}
+                    placeholder="0"
+                    onChange={e => updateCost('leatherCostApple', e.target.value)}
+                    className="input-field"
+                  />
+                </Field>
+              </div>
+            </div>
+          )}
+
+          {/* Pricing */}
+          <div
+            className="border rounded-sm p-5"
+            style={{ borderColor: '#E8E4DC', backgroundColor: '#FFFFFF' }}
+          >
+            <div className="label-xs mb-4">④ Pricing Strategy · 定價策略</div>
+
+            <div className="mb-4">
+              <div className="text-[10px] tracking-wider mb-2" style={{ color: '#8B8580' }}>
+                PRICING METHOD
+              </div>
+              <div className="seg">
+                {(['multiplier', 'fixed', 'margin'] as const).map(m => (
+                  <button
+                    key={m}
+                    type="button"
+                    data-active={pricing.method === m}
+                    onClick={() => setPricing(p => ({ ...p, method: m }))}
+                  >
+                    {m === 'multiplier' ? '倍數 MULTIPLIER' : m === 'fixed' ? '固定價 FIXED' : '利潤率 MARGIN'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {pricing.method === 'multiplier' && (
+              <div className="mb-4">
+                <div className="text-[10px] tracking-wider mb-2" style={{ color: '#8B8580' }}>
+                  MULTIPLIER VALUE
+                </div>
+                <div className="flex gap-2">
+                  {MULTIPLIERS.map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setPricing(p => ({ ...p, multiplier: m }))}
+                      className="flex-1 py-3 border rounded-sm transition-all"
+                      style={{
+                        borderColor: pricing.multiplier === m ? '#1A1A1A' : '#E8E4DC',
+                        backgroundColor: pricing.multiplier === m ? '#1A1A1A' : '#FFFFFF',
+                        color: pricing.multiplier === m ? '#FFFFFF' : '#1A1A1A',
+                      }}
+                    >
+                      <div className="font-mono tabular text-lg font-semibold leading-none">×{m}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {pricing.method === 'fixed' && (
+              <div className="mb-4 max-w-xs">
+                <Field label="Retail Price · 零售價" prefix="$">
+                  <input
+                    type="number" min="0" step="1"
+                    value={pricing.fixedPrice || ''}
+                    placeholder="0"
+                    onChange={e => setPricing(p => ({ ...p, fixedPrice: parseFloat(e.target.value) || 0 }))}
+                    className="input-field"
+                    style={{ fontSize: '18px', fontWeight: 600 }}
+                  />
+                </Field>
+              </div>
+            )}
+
+            {pricing.method === 'margin' && (
+              <div className="mb-4 max-w-xs">
+                <Field label="Target Margin · 目標利潤率" suffix="%">
+                  <input
+                    type="number" min="0" max="99" step="1"
+                    value={pricing.multiplier || ''}
+                    placeholder="0"
+                    onChange={e => setPricing(p => ({ ...p, multiplier: parseFloat(e.target.value) || 0 }))}
+                    className="input-field"
+                    style={{ fontSize: '18px', fontWeight: 600 }}
+                  />
+                </Field>
+              </div>
+            )}
+
+            <div>
+              <div className="text-[10px] tracking-wider mb-2" style={{ color: '#8B8580' }}>
+                DISCOUNT
+              </div>
+              <div className="flex gap-2 flex-wrap items-center">
+                {DISCOUNT_PRESETS.map(d => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => setPricing(p => ({ ...p, discountRate: d }))}
+                    className="px-4 py-2 border rounded-sm text-sm transition-all"
+                    style={{
+                      borderColor: pricing.discountRate === d ? '#1A1A1A' : '#E8E4DC',
+                      backgroundColor: pricing.discountRate === d ? '#1A1A1A' : '#FFFFFF',
+                      color: pricing.discountRate === d ? '#FFFFFF' : '#1A1A1A',
+                      fontFamily: 'JetBrains Mono, monospace',
+                    }}
+                  >
+                    {Math.round(d * 100)}折
+                  </button>
+                ))}
+                <input
+                  type="number" min="0" max="1" step="0.01"
+                  value={pricing.discountRate}
+                  onChange={e => setPricing(p => ({ ...p, discountRate: parseFloat(e.target.value) || 1 }))}
+                  className="input-field w-20"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT: Sticky live preview */}
+        <aside className="lg:col-span-1">
+          <div
+            className="lg:sticky lg:top-24 border rounded-sm overflow-hidden"
+            style={{ borderColor: '#1A1A1A', backgroundColor: '#FFFFFF' }}
+          >
+            {/* Preview header */}
+            <div
+              className="px-5 py-4 border-b flex items-center justify-between"
+              style={{ borderColor: '#1A1A1A', backgroundColor: '#1A1A1A', color: '#FFFFFF' }}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block w-1.5 h-1.5 rounded-full animate-pulse"
+                  style={{ backgroundColor: '#5C8A6E' }}
+                />
+                <span className="text-[10px] tracking-wider">LIVE PREVIEW</span>
+              </div>
+              <span className="text-[10px] opacity-60">即時預覽</span>
+            </div>
+
+            {/* Body */}
+            <div className="p-5 space-y-5">
+              {/* Product identity */}
               <div>
-                <label className={labelCls} style={labelStyle}>面積 Area</label>
-                <div
-                  className="font-serif text-xl font-light italic py-2 px-1"
-                  style={{ color: areaSqFt > 0 ? '#B85432' : '#E8E4DC' }}
-                >
-                  {areaSqFt > 0 ? `${areaSqFt.toFixed(3)}` : '—'}
-                  <span className="text-xs ml-1" style={{ color: '#8B8580' }}>ft²</span>
+                <div className="font-serif text-xl" style={{ color: '#1A1A1A' }}>
+                  {nameCn || <em className="opacity-30">Product name…</em>}
                 </div>
+                <div className="text-[11px] italic mt-0.5" style={{ color: '#8B8580' }}>
+                  {nameEn || category}{sku && ` · ${sku}`}
+                </div>
+              </div>
+
+              <div className="h-px" style={{ backgroundColor: '#F0EDE6' }} />
+
+              {/* Costs */}
+              <div className="space-y-1.5">
+                <PreviewRow label="Material" cn="材料" value={formatCurrency(mat)} muted />
+                <PreviewRow label="Labor" cn="手工" value={formatCurrency(costs.laborCost)} muted />
+                <PreviewRow label="TOTAL COST" cn="總成本" value={formatCurrency(total)} bold />
+              </div>
+
+              <div className="h-px" style={{ backgroundColor: '#F0EDE6' }} />
+
+              {/* Prices */}
+              <div className="space-y-1.5">
+                <PreviewRow
+                  label="Retail Price"
+                  cn="零售價"
+                  value={formatCurrency(price)}
+                  bold
+                  large
+                />
+                <PreviewRow
+                  label={`Discount ${Math.round(pricing.discountRate * 100)}折`}
+                  cn="折扣價"
+                  value={formatCurrency(discPrice)}
+                  accent
+                />
+              </div>
+
+              <div className="h-px" style={{ backgroundColor: '#F0EDE6' }} />
+
+              {/* Profit */}
+              <div>
+                <PreviewRow label="Profit" cn="利潤" value={`+${formatCurrency(profit)}`} positive />
+                <div className="mt-3">
+                  <div className="flex items-baseline justify-between mb-1.5">
+                    <span className="label-xs">Margin · 利潤率</span>
+                    <span
+                      className="font-mono tabular text-xl font-semibold"
+                      style={{ color: marginColor }}
+                    >
+                      {formatPercent(margin)}
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-sm" style={{ backgroundColor: '#F0EDE6' }}>
+                    <div
+                      className="h-full rounded-sm transition-all"
+                      style={{
+                        width: `${Math.min(Math.max(margin * 100, 0), 100)}%`,
+                        backgroundColor: marginColor,
+                      }}
+                    />
+                  </div>
+                  <div className="flex justify-between mt-1 text-[9px] font-mono tabular" style={{ color: '#8B8580' }}>
+                    <span>0%</span>
+                    <span>target 70%</span>
+                    <span>100%</span>
+                  </div>
+                  <div
+                    className="mt-2 text-[10px] tracking-wider text-center py-1 rounded-sm"
+                    style={{
+                      color: marginColor,
+                      backgroundColor: margin >= 0.7 ? '#F5F1E8' : margin >= 0.5 ? '#FDF7E8' : '#F5EDE8',
+                    }}
+                  >
+                    ● {marginStatus}
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-px" style={{ backgroundColor: '#F0EDE6' }} />
+
+              {/* Meta */}
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="label-xs">Actual Multiplier</span>
+                <span className="font-mono tabular font-semibold" style={{ color: '#1A1A1A' }}>
+                  ×{actualMultiplier.toFixed(2)}
+                </span>
               </div>
             </div>
 
-            {/* Manual override */}
-            <div className="grid grid-cols-2 gap-6 pt-6 border-t" style={{ borderColor: '#F0EDE6' }}>
-              {isAppleLeather ? (
-                <>
-                  <div>
-                    <label className={labelCls} style={labelStyle}>數量 Qty (ft²)</label>
-                    <input type="number" min="0" step="0.001"
-                      value={costs.leatherQtyApple || ''}
-                      placeholder="—"
-                      onChange={e => updateCost('leatherQtyApple', e.target.value)}
-                      className={inputCls}
-                      style={inputStyle} />
-                  </div>
-                  <div>
-                    <label className={labelCls} style={labelStyle}>成本 Cost ($)</label>
-                    <input type="number" min="0" step="0.1"
-                      value={costs.leatherCostApple || ''}
-                      placeholder="—"
-                      onChange={e => updateCost('leatherCostApple', e.target.value)}
-                      className={inputCls}
-                      style={inputStyle} />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label className={labelCls} style={labelStyle}>數量 Qty (ft²)</label>
-                    <input type="number" min="0" step="0.001"
-                      value={costs.leatherQtyGoat || ''}
-                      placeholder="—"
-                      onChange={e => updateCost('leatherQtyGoat', e.target.value)}
-                      className={inputCls}
-                      style={inputStyle} />
-                  </div>
-                  <div>
-                    <label className={labelCls} style={labelStyle}>成本 Cost ($)</label>
-                    <input type="number" min="0" step="0.1"
-                      value={costs.leatherCostGoat || ''}
-                      placeholder="—"
-                      onChange={e => updateCost('leatherCostGoat', e.target.value)}
-                      className={inputCls}
-                      style={inputStyle} />
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
-        {isOtherLeather && (
-          <div className="border-l-2 pl-6 py-2" style={{ borderColor: '#8B8580' }}>
-            <div className="font-serif text-xl italic font-light mb-6" style={{ color: '#1A1A1A' }}>
-              Other Material — 其他皮料
-            </div>
-            <div className="grid grid-cols-2 gap-6">
-              {costField('數量 Qty', 'leatherQtyApple', 'ft²')}
-              {costField('成本 Cost', 'leatherCostApple')}
-            </div>
-          </div>
-        )}
-
-        {/* Cost summary - elegant inline */}
-        <div className="mt-10 flex items-baseline gap-12">
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.2em]" style={{ color: '#8B8580' }}>
-              Material / 材料成本
-            </div>
-            <div className="font-serif text-2xl font-light italic mt-1" style={{ color: '#4A4A48' }}>
-              {formatCurrency(mat)}
-            </div>
-          </div>
-          <div className="h-12 w-px" style={{ backgroundColor: '#E8E4DC' }} />
-          <div>
-            <div className="text-[10px] uppercase tracking-[0.2em]" style={{ color: '#8B8580' }}>
-              Total / 總成本
-            </div>
-            <div className="font-serif text-3xl font-medium mt-1" style={{ color: '#1A1A1A' }}>
-              {formatCurrency(total)}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Section: Pricing */}
-      <div className="mb-12">
-        <div className="text-[10px] uppercase tracking-[0.2em] mb-6" style={{ color: '#8B8580' }}>
-          iii. Pricing / 定價設定
-        </div>
-
-        {/* Method tabs */}
-        <div className="flex items-center gap-6 mb-8">
-          <span className="text-[10px] uppercase tracking-[0.2em]" style={{ color: '#8B8580' }}>
-            Method
-          </span>
-          {(['multiplier', 'fixed', 'margin'] as const).map(m => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setPricing(p => ({ ...p, method: m }))}
-              className="text-xs uppercase tracking-[0.15em] pb-1 transition-all"
-              style={{
-                borderBottom: pricing.method === m ? '1px solid #1A1A1A' : '1px solid transparent',
-                color: pricing.method === m ? '#1A1A1A' : '#8B8580',
-                fontWeight: pricing.method === m ? 600 : 400,
-              }}
-            >
-              {m === 'multiplier' ? '倍數' : m === 'fixed' ? '固定價' : '利潤率'}
-            </button>
-          ))}
-        </div>
-
-        {pricing.method === 'multiplier' && (
-          <div className="flex items-center gap-6 mb-8">
-            <span className="text-[10px] uppercase tracking-[0.2em]" style={{ color: '#8B8580' }}>
-              Multiplier
-            </span>
-            {MULTIPLIERS.map(m => (
-              <button
-                key={m}
-                type="button"
-                onClick={() => setPricing(p => ({ ...p, multiplier: m }))}
-                className="font-serif text-2xl font-light italic transition-all"
-                style={{
-                  color: pricing.multiplier === m ? '#B85432' : '#E8E4DC',
-                }}
-              >
-                ×{m}
+            {/* Submit */}
+            <div className="px-5 py-4 border-t" style={{ borderColor: '#E8E4DC', backgroundColor: '#FAFAF7' }}>
+              <button type="submit" className="btn-primary w-full">
+                {editProduct ? '↻ Update Entry · 更新' : '✓ Save Entry · 儲存'}
               </button>
-            ))}
-          </div>
-        )}
-
-        {pricing.method === 'fixed' && (
-          <div className="mb-8 max-w-xs">
-            <label className={labelCls} style={labelStyle}>Retail Price / 零售價</label>
-            <div className="flex items-baseline gap-2">
-              <span className="font-serif text-2xl italic" style={{ color: '#8B8580' }}>$</span>
-              <input type="number" min="0" step="1"
-                value={pricing.fixedPrice || ''}
-                onChange={e => setPricing(p => ({ ...p, fixedPrice: parseFloat(e.target.value) || 0 }))}
-                className="w-full bg-transparent border-b py-2 px-1 font-serif text-3xl font-light"
-                style={inputStyle} />
+              <div className="text-[10px] mt-2 text-center tracking-wider" style={{ color: '#8B8580' }}>
+                Auto-saved to localStorage
+              </div>
             </div>
           </div>
-        )}
-
-        {pricing.method === 'margin' && (
-          <div className="mb-8 max-w-xs">
-            <label className={labelCls} style={labelStyle}>Target Margin / 目標利潤率 (%)</label>
-            <input type="number" min="0" max="99" step="1"
-              value={pricing.multiplier || ''}
-              onChange={e => setPricing(p => ({ ...p, multiplier: parseFloat(e.target.value) || 0 }))}
-              className="w-full bg-transparent border-b py-2 px-1 font-serif text-3xl font-light"
-              style={inputStyle} />
-          </div>
-        )}
-
-        {/* Discount */}
-        <div className="flex items-center gap-6 mb-10">
-          <span className="text-[10px] uppercase tracking-[0.2em]" style={{ color: '#8B8580' }}>
-            Discount
-          </span>
-          {DISCOUNT_PRESETS.map(d => (
-            <button
-              key={d}
-              type="button"
-              onClick={() => setPricing(p => ({ ...p, discountRate: d }))}
-              className="font-serif text-base italic pb-1 transition-all"
-              style={{
-                borderBottom: pricing.discountRate === d ? '1px solid #1A1A1A' : '1px solid transparent',
-                color: pricing.discountRate === d ? '#1A1A1A' : '#8B8580',
-              }}
-            >
-              {Math.round(d * 100)}折
-            </button>
-          ))}
-          <input type="number" min="0" max="1" step="0.01"
-            value={pricing.discountRate}
-            onChange={e => setPricing(p => ({ ...p, discountRate: parseFloat(e.target.value) || 1 }))}
-            className="w-16 bg-transparent border-b text-xs font-mono py-1 px-1 ml-2"
-            style={inputStyle} />
-        </div>
-
-        {/* Price summary - editorial */}
-        <div className="border-t border-b py-8 grid grid-cols-2 md:grid-cols-5 gap-6" style={{ borderColor: '#1A1A1A' }}>
-          <Summary label="Retail / 零售價" value={formatCurrency(price)} large />
-          <Summary label={`Discount / ${Math.round(pricing.discountRate * 100)}折`} value={formatCurrency(discPrice)} accent />
-          <Summary label="Profit / 利潤" value={formatCurrency(price - total)} />
-          <Summary label="Margin / 利潤率" value={formatPercent(margin)} />
-          <Summary label="Multiplier / 倍數" value={`×${total > 0 ? (price / total).toFixed(2) : '0'}`} muted />
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex gap-8 justify-end items-center pt-4">
-        <button
-          type="button"
-          onClick={resetForm}
-          className="text-[10px] uppercase tracking-[0.25em] hover:opacity-50 transition-opacity"
-          style={{ color: '#8B8580' }}
-        >
-          Cancel / 取消
-        </button>
-        <button
-          type="submit"
-          className="text-[10px] uppercase tracking-[0.25em] border-b pb-1 hover:opacity-60 transition-opacity"
-          style={{ borderColor: '#1A1A1A', color: '#1A1A1A' }}
-        >
-          {editProduct ? 'Update Entry / 更新' : 'Save Entry / 新增'} →
-        </button>
+        </aside>
       </div>
     </form>
   );
 }
 
-function Summary({ label, value, large, accent, muted }: { label: string; value: string; large?: boolean; accent?: boolean; muted?: boolean }) {
-  const color = accent ? '#B85432' : muted ? '#8B8580' : '#1A1A1A';
+function Field({
+  label, required, prefix, suffix, children,
+}: {
+  label: string;
+  required?: boolean;
+  prefix?: string;
+  suffix?: string;
+  children: React.ReactNode;
+}) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-[0.2em] mb-2" style={{ color: '#8B8580' }}>
-        {label}
+      <div className="label-xs mb-1.5">
+        {label}{required && <span style={{ color: '#B85432' }}> *</span>}
       </div>
-      <div
-        className={`font-serif font-light ${large ? 'text-4xl' : 'text-2xl'} ${accent ? 'italic' : ''} leading-none`}
+      <div className="relative">
+        {prefix && (
+          <span
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono"
+            style={{ color: '#8B8580' }}
+          >
+            {prefix}
+          </span>
+        )}
+        <div className={prefix ? 'pl-4' : ''}>{children}</div>
+        {suffix && (
+          <span
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] tracking-wider"
+            style={{ color: '#8B8580' }}
+          >
+            {suffix}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function PreviewRow({
+  label, cn, value, muted, bold, large, accent, positive,
+}: {
+  label: string;
+  cn: string;
+  value: string;
+  muted?: boolean;
+  bold?: boolean;
+  large?: boolean;
+  accent?: boolean;
+  positive?: boolean;
+}) {
+  const color = accent ? '#B85432' : positive ? '#5C8A6E' : muted ? '#8B8580' : '#1A1A1A';
+  return (
+    <div className="flex items-baseline justify-between">
+      <div className="flex items-baseline gap-1.5">
+        <span className={`text-[10px] tracking-wider ${bold ? 'font-semibold' : ''}`} style={{ color: muted ? '#8B8580' : '#4A4A48' }}>
+          {label}
+        </span>
+        <span className="text-[9px]" style={{ color: '#8B8580' }}>{cn}</span>
+      </div>
+      <span
+        className={`font-mono tabular ${large ? 'text-xl' : bold ? 'text-sm' : 'text-xs'} ${bold ? 'font-semibold' : ''}`}
         style={{ color }}
       >
         {value}
-      </div>
+      </span>
     </div>
   );
 }
