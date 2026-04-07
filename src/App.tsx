@@ -31,17 +31,19 @@ function App() {
     <Layout>
       <Dashboard products={products} />
 
-      <div className="flex gap-3 mb-6 items-center">
+      <div className="flex items-center gap-8 mb-12 pb-4 border-b" style={{ borderColor: '#E8E4DC' }}>
         {!showForm && (
           <button
             onClick={() => { setEditProduct(null); setShowForm(true); }}
-            className="bh-btn px-6 py-3 text-xs font-black uppercase tracking-widest border-2 border-black"
-            style={{ backgroundColor: '#E63946', color: '#FFFFFF' }}
+            className="text-[10px] uppercase tracking-[0.25em] border-b pb-1 hover:opacity-60 transition-opacity"
+            style={{ borderColor: '#1A1A1A', color: '#1A1A1A' }}
           >
-            + New Product / 新增產品
+            + New Entry / 新增產品
           </button>
         )}
-        <ExportButton products={products} onReset={resetToDefaults} />
+        <div className="ml-auto">
+          <ExportButton products={products} onReset={resetToDefaults} />
+        </div>
       </div>
 
       {showForm && (

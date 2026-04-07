@@ -2,53 +2,45 @@ import type { ReactNode } from 'react';
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#F2EFE9' }}>
-      {/* Bauhaus colored stripe */}
-      <div className="flex h-2">
-        <div className="flex-1" style={{ backgroundColor: '#E63946' }} />
-        <div className="flex-1" style={{ backgroundColor: '#F4C842' }} />
-        <div className="flex-1" style={{ backgroundColor: '#1D3557' }} />
-      </div>
-
-      <header className="border-b-2 border-black" style={{ backgroundColor: '#0A0A0A' }}>
-        <div className="max-w-7xl mx-auto px-6 py-6 flex items-center gap-5">
-          {/* Bauhaus geometric logo */}
-          <div className="relative w-14 h-14 flex-shrink-0">
-            <div className="absolute top-0 left-0 w-8 h-8 rounded-full" style={{ backgroundColor: '#E63946' }} />
-            <div className="absolute bottom-0 right-0 w-7 h-7" style={{ backgroundColor: '#F4C842' }} />
-            <div
-              className="absolute top-1 right-0 w-0 h-0"
-              style={{
-                borderLeft: '12px solid transparent',
-                borderRight: '12px solid transparent',
-                borderBottom: '20px solid #1D3557',
-              }}
-            />
-          </div>
-
-          <div className="flex-1">
-            <h1 className="text-2xl font-black tracking-tight text-white uppercase leading-none">
-              Broken Fingers Plus
-            </h1>
-            <p className="text-sm text-white opacity-70 tracking-widest uppercase mt-1 font-medium">
-              破指自愈 · Cost & Pricing System
-            </p>
-          </div>
-
-          <div className="hidden md:flex items-center gap-1 text-xs font-mono text-white opacity-50">
-            <span>v1.0</span>
+    <div className="min-h-screen" style={{ backgroundColor: '#FAFAF7' }}>
+      <header className="border-b" style={{ borderColor: '#E8E4DC' }}>
+        <div className="max-w-6xl mx-auto px-8 py-10">
+          <div className="flex items-end justify-between">
+            <div>
+              <div className="text-[10px] uppercase tracking-[0.3em] mb-3" style={{ color: '#8B8580' }}>
+                Est. 2025 — Hong Kong
+              </div>
+              <h1 className="font-serif text-5xl md:text-6xl font-light leading-none tracking-tight" style={{ color: '#1A1A1A' }}>
+                Broken Fingers <em className="font-medium">Plus</em>
+              </h1>
+              <div className="mt-4 text-sm font-light tracking-wide" style={{ color: '#4A4A48' }}>
+                破指自愈 — Cost &amp; Pricing Atelier
+              </div>
+            </div>
+            <div className="hidden md:block text-right">
+              <div className="text-[10px] uppercase tracking-[0.3em]" style={{ color: '#8B8580' }}>
+                Volume
+              </div>
+              <div className="font-serif text-2xl font-light italic mt-1" style={{ color: '#1A1A1A' }}>
+                I
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8">
+      <main className="max-w-6xl mx-auto px-8 py-12">
         {children}
       </main>
 
-      <footer className="border-t-2 border-black mt-12 py-6" style={{ backgroundColor: '#F2EFE9' }}>
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between text-xs uppercase tracking-widest font-medium">
-          <span>BROKEN FINGERS PLUS · 破指自愈</span>
-          <span className="font-mono opacity-60">2026</span>
+      <footer className="border-t mt-20 py-10" style={{ borderColor: '#E8E4DC' }}>
+        <div className="max-w-6xl mx-auto px-8 flex items-center justify-between">
+          <div className="text-[10px] uppercase tracking-[0.3em]" style={{ color: '#8B8580' }}>
+            Broken Fingers Plus &nbsp;·&nbsp; 破指自愈
+          </div>
+          <div className="font-serif text-sm italic" style={{ color: '#8B8580' }}>
+            Made with care, MMXXVI
+          </div>
         </div>
       </footer>
     </div>

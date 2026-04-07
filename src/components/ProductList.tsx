@@ -58,35 +58,44 @@ export function ProductList({ products, onEdit, onDelete }: Props) {
   }, [filtered]);
 
   return (
-    <div className="border-2 border-black bg-white mt-6">
-      <div className="px-6 py-4 border-b-2 border-black flex flex-wrap items-center gap-4" style={{ backgroundColor: '#0A0A0A' }}>
-        <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">
-          Products / 產品列表
+    <section className="mt-12">
+      {/* Editorial section header */}
+      <div className="flex items-baseline gap-4 mb-8">
+        <span className="text-[10px] uppercase tracking-[0.3em]" style={{ color: '#8B8580' }}>
+          № 03
+        </span>
+        <div className="h-px flex-1" style={{ backgroundColor: '#E8E4DC' }} />
+        <h2 className="font-serif text-2xl italic font-light" style={{ color: '#1A1A1A' }}>
+          Collection
         </h2>
-        <span className="text-xs font-mono text-white opacity-60">
-          [{filtered.length}]
+      </div>
+
+      {/* Search bar - minimal */}
+      <div className="flex items-baseline gap-6 mb-8 pb-4 border-b" style={{ borderColor: '#E8E4DC' }}>
+        <span className="font-serif text-lg italic" style={{ color: '#1A1A1A' }}>
+          {filtered.length} <span className="text-xs tracking-wide" style={{ color: '#8B8580' }}>products</span>
         </span>
         <input
-          placeholder="SEARCH / 搜尋..."
+          placeholder="Search by name, SKU..."
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="ml-auto border-2 border-white bg-black text-white placeholder-gray-500 px-3 py-2 text-xs uppercase tracking-wider w-72 font-mono focus:bg-white focus:text-black"
-          style={{ outline: 'none' }}
+          className="ml-auto bg-transparent border-b text-sm py-1 px-1 w-64 placeholder:italic"
+          style={{ borderColor: '#E8E4DC', color: '#1A1A1A' }}
         />
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-collapse">
-          <thead style={{ backgroundColor: '#F2EFE9' }} className="border-b-2 border-black">
-            <tr>
+          <thead>
+            <tr className="border-b" style={{ borderColor: '#1A1A1A' }}>
               <Th onClick={() => toggleSort('category')}>類別{arrow('category')}</Th>
-              <Th onClick={() => toggleSort('nameCn')}>產品名稱{arrow('nameCn')}</Th>
-              <th className="px-3 py-3 text-left text-[10px] font-black uppercase tracking-widest">SKU</th>
-              <Th onClick={() => toggleSort('totalCost')} align="right">總成本{arrow('totalCost')}</Th>
-              <Th onClick={() => toggleSort('retailPrice')} align="right">零售價{arrow('retailPrice')}</Th>
-              <th className="px-3 py-3 text-right text-[10px] font-black uppercase tracking-widest">折扣價</th>
-              <Th onClick={() => toggleSort('profitMargin')} align="right">利潤率{arrow('profitMargin')}</Th>
-              <th className="px-3 py-3 text-center text-[10px] font-black uppercase tracking-widest">操作</th>
+              <Th onClick={() => toggleSort('nameCn')}>Product / 產品{arrow('nameCn')}</Th>
+              <th className="px-3 py-4 text-left text-[10px] uppercase tracking-[0.2em]" style={{ color: '#8B8580' }}>SKU</th>
+              <Th onClick={() => toggleSort('totalCost')} align="right">Cost{arrow('totalCost')}</Th>
+              <Th onClick={() => toggleSort('retailPrice')} align="right">Retail{arrow('retailPrice')}</Th>
+              <th className="px-3 py-4 text-right text-[10px] uppercase tracking-[0.2em]" style={{ color: '#8B8580' }}>折扣</th>
+              <Th onClick={() => toggleSort('profitMargin')} align="right">Margin{arrow('profitMargin')}</Th>
+              <th className="px-3 py-4 text-center text-[10px] uppercase tracking-[0.2em]" style={{ color: '#8B8580' }}></th>
             </tr>
           </thead>
           <tbody>
@@ -100,7 +109,7 @@ export function ProductList({ products, onEdit, onDelete }: Props) {
           </tbody>
         </table>
       </div>
-    </div>
+    </section>
   );
 }
 
@@ -108,11 +117,15 @@ function CategoryGroup({ category, items, onEdit, onDelete }: { category: string
   return (
     <>
       <tr>
-        <td colSpan={8} className="px-4 py-2 border-t-2 border-b-2 border-black" style={{ backgroundColor: '#F4C842' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-3 h-3" style={{ backgroundColor: '#0A0A0A' }} />
-            <span className="text-xs font-black uppercase tracking-[0.2em]">{category}</span>
-            <span className="text-xs font-mono opacity-70">[{items.length}]</span>
+        <td colSpan={8} className="pt-10 pb-3">
+          <div className="flex items-baseline gap-4">
+            <span className="font-serif text-xl italic font-light" style={{ color: '#B85432' }}>
+              {category}
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.2em]" style={{ color: '#8B8580' }}>
+              — {items.length} {items.length === 1 ? 'piece' : 'pieces'}
+            </span>
+            <div className="h-px flex-1 ml-2" style={{ backgroundColor: '#E8E4DC' }} />
           </div>
         </td>
       </tr>
@@ -127,44 +140,53 @@ function ProductRow({ product: p, onEdit, onDelete, hideCategory }: { product: P
   const disc = discountedPrice(price, p.pricing.discountRate);
   const margin = profitMargin(p.costs, p.pricing);
 
-  const marginColor = margin > 0.7 ? '#1D3557' : margin > 0.5 ? '#F4C842' : '#E63946';
-  const marginText = margin > 0.7 ? '#FFFFFF' : '#0A0A0A';
+  // subtle margin indicator
+  const marginColor = margin > 0.7 ? '#1A1A1A' : margin > 0.5 ? '#8B8580' : '#B85432';
 
   return (
-    <tr className="border-b border-black/20 hover:bg-yellow-50/50 transition-colors">
-      {!hideCategory && <td className="px-3 py-3 text-xs uppercase tracking-wider">{p.category}</td>}
-      {hideCategory && <td className="px-3 py-3" />}
-      <td className="px-3 py-3">
-        <div className="font-bold text-black">{p.nameCn}</div>
-        <div className="text-xs text-gray-500 uppercase tracking-wide">{p.nameEn}</div>
+    <tr
+      className="border-b transition-colors hover:bg-stone-50/50"
+      style={{ borderColor: '#F0EDE6' }}
+    >
+      {!hideCategory && (
+        <td className="px-3 py-4 text-xs italic" style={{ color: '#8B8580' }}>
+          {p.category}
+        </td>
+      )}
+      {hideCategory && <td className="px-3 py-4" />}
+      <td className="px-3 py-4">
+        <div className="font-serif text-base font-medium" style={{ color: '#1A1A1A' }}>{p.nameCn}</div>
+        <div className="text-[11px] italic mt-0.5" style={{ color: '#8B8580' }}>{p.nameEn}</div>
       </td>
-      <td className="px-3 py-3 font-mono text-xs text-gray-600">{p.sku}</td>
-      <td className="px-3 py-3 text-right font-mono text-sm">{formatCurrency(cost)}</td>
-      <td className="px-3 py-3 text-right font-mono font-bold text-sm">{formatCurrency(price)}</td>
-      <td className="px-3 py-3 text-right font-mono text-sm" style={{ color: '#E63946' }}>
+      <td className="px-3 py-4 font-mono text-xs" style={{ color: '#8B8580' }}>{p.sku}</td>
+      <td className="px-3 py-4 text-right font-mono text-sm" style={{ color: '#4A4A48' }}>
+        {formatCurrency(cost)}
+      </td>
+      <td className="px-3 py-4 text-right font-serif text-base font-medium" style={{ color: '#1A1A1A' }}>
+        {formatCurrency(price)}
+      </td>
+      <td className="px-3 py-4 text-right font-mono text-sm italic" style={{ color: '#B85432' }}>
         {formatCurrency(disc)}
       </td>
-      <td className="px-3 py-3 text-right">
-        <span
-          className="inline-block px-2 py-1 text-[10px] font-black border-2 border-black font-mono"
-          style={{ backgroundColor: marginColor, color: marginText }}
-        >
+      <td className="px-3 py-4 text-right">
+        <span className="font-serif text-base italic" style={{ color: marginColor }}>
           {formatPercent(margin)}
         </span>
       </td>
-      <td className="px-3 py-3 text-center">
+      <td className="px-3 py-4 text-right">
         <button
           onClick={() => onEdit(p)}
-          className="text-[10px] font-black uppercase tracking-wider border-b-2 border-black hover:bg-yellow-200 px-1 mr-2"
+          className="text-[10px] uppercase tracking-[0.2em] mr-3 hover:opacity-50 transition-opacity"
+          style={{ color: '#1A1A1A' }}
         >
-          編輯
+          Edit
         </button>
         <button
           onClick={() => onDelete(p.id)}
-          className="text-[10px] font-black uppercase tracking-wider border-b-2 px-1"
-          style={{ borderColor: '#E63946', color: '#E63946' }}
+          className="text-[10px] uppercase tracking-[0.2em] hover:opacity-50 transition-opacity"
+          style={{ color: '#B85432' }}
         >
-          刪除
+          Delete
         </button>
       </td>
     </tr>
@@ -175,7 +197,8 @@ function Th({ children, onClick, align }: { children: React.ReactNode; onClick?:
   return (
     <th
       onClick={onClick}
-      className={`px-3 py-3 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-black hover:text-white select-none transition-colors ${align === 'right' ? 'text-right' : 'text-left'}`}
+      className={`px-3 py-4 text-[10px] uppercase tracking-[0.2em] cursor-pointer hover:opacity-60 select-none transition-opacity ${align === 'right' ? 'text-right' : 'text-left'}`}
+      style={{ color: '#8B8580' }}
     >
       {children}
     </th>

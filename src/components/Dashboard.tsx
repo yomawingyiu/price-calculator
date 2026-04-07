@@ -17,11 +17,11 @@ export function Dashboard({ products }: { products: Product[] }) {
   const totalMat = products.reduce((s, p) => s + materialCost(p.costs), 0);
 
   const breakdown = [
-    { label: '手工費', en: 'LABOR', value: totalLabor, color: '#0A0A0A' },
-    { label: '皮料', en: 'LEATHER', value: totalLeather, color: '#E63946' },
-    { label: '五金', en: 'HARDWARE', value: totalHardware, color: '#1D3557' },
-    { label: '包裝', en: 'PACKAGING', value: totalPackaging, color: '#F4C842' },
-    { label: '運費', en: 'SHIPPING', value: totalShipping, color: '#5C5C5C' },
+    { label: 'Labor', cn: '手工費', value: totalLabor },
+    { label: 'Leather', cn: '皮料', value: totalLeather },
+    { label: 'Hardware', cn: '五金', value: totalHardware },
+    { label: 'Packaging', cn: '包裝', value: totalPackaging },
+    { label: 'Shipping', cn: '運費', value: totalShipping },
   ];
   const costTotal = totalLabor + totalMat || 1;
 
@@ -30,157 +30,126 @@ export function Dashboard({ products }: { products: Product[] }) {
   products.forEach(p => categories.set(p.category, (categories.get(p.category) || 0) + 1));
 
   return (
-    <div className="mb-8">
-      {/* Stat cards - bauhaus blocks */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-0 mb-8 border-2 border-black">
-        <Card
-          label="PRODUCTS"
-          subLabel="產品數量"
-          value={`${products.length}`}
-          unit="款"
-          bg="#F2EFE9"
-          color="#0A0A0A"
-          shape="circle"
-        />
-        <Card
-          label="MARGIN"
-          subLabel="平均利潤率"
-          value={formatPercent(avgMargin).replace('%', '')}
-          unit="%"
-          bg="#E63946"
-          color="#FFFFFF"
-          shape="square"
-        />
-        <Card
-          label="REVENUE"
-          subLabel="總零售值"
-          value={formatCurrency(totalRevenue)}
-          bg="#1D3557"
-          color="#FFFFFF"
-          shape="triangle"
-        />
-        <Card
-          label="COST"
-          subLabel="總成本"
-          value={formatCurrency(totalCosts)}
-          bg="#F4C842"
-          color="#0A0A0A"
-          shape="rect"
-        />
+    <section className="mb-16">
+      {/* Editorial section header */}
+      <div className="flex items-baseline gap-4 mb-10">
+        <span className="text-[10px] uppercase tracking-[0.3em]" style={{ color: '#8B8580' }}>
+          № 01
+        </span>
+        <div className="h-px flex-1" style={{ backgroundColor: '#E8E4DC' }} />
+        <h2 className="font-serif text-2xl italic font-light" style={{ color: '#1A1A1A' }}>
+          Overview
+        </h2>
       </div>
 
-      {/* Cost structure */}
-      <div className="border-2 border-black bg-white p-6 mb-6">
-        <div className="flex items-baseline justify-between mb-4">
-          <h3 className="text-xs font-black uppercase tracking-[0.2em]">Cost Structure / 成本結構</h3>
-          <span className="text-xs font-mono opacity-60">{formatCurrency(costTotal)}</span>
-        </div>
-        <div className="flex h-8 border-2 border-black mb-4">
-          {breakdown.map(b => (
-            <div
-              key={b.label}
-              className="border-r-2 border-black last:border-r-0 transition-all"
-              style={{
-                width: `${(b.value / costTotal) * 100}%`,
-                backgroundColor: b.color,
-              }}
-              title={`${b.label}: ${formatCurrency(b.value)}`}
-            />
-          ))}
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {breakdown.map(b => (
-            <div key={b.label} className="flex items-start gap-2">
-              <div
-                className="w-4 h-4 mt-0.5 border-2 border-black flex-shrink-0"
-                style={{ backgroundColor: b.color }}
-              />
-              <div className="min-w-0">
-                <div className="text-[10px] font-black uppercase tracking-wider">{b.en}</div>
-                <div className="text-xs text-gray-600">{b.label}</div>
-                <div className="text-xs font-mono mt-0.5">
-                  {((b.value / costTotal) * 100).toFixed(1)}%
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Hero stats - editorial layout */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-y-10 gap-x-8 mb-16">
+        <Stat label="Products" cn="產品數量" value={`${products.length}`} suffix="款" />
+        <Stat label="Avg. Margin" cn="平均利潤率" value={formatPercent(avgMargin).replace('%', '')} suffix="%" />
+        <Stat label="Total Revenue" cn="總零售值" value={formatCurrency(totalRevenue)} />
+        <Stat label="Total Cost" cn="總成本" value={formatCurrency(totalCosts)} />
       </div>
 
-      {/* Category distribution */}
-      <div className="border-2 border-black bg-white p-6">
-        <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4">
-          Categories / 類別分佈
-        </h3>
-        <div className="flex flex-wrap gap-0">
-          {[...categories.entries()].map(([cat, count], i) => {
-            const colors = ['#0A0A0A', '#E63946', '#1D3557', '#F4C842', '#5C5C5C'];
-            const bg = colors[i % colors.length];
-            const isLight = bg === '#F4C842' || bg === '#F2EFE9';
+      <div className="h-px mb-12" style={{ backgroundColor: '#E8E4DC' }} />
+
+      {/* Cost structure - minimal editorial */}
+      <div className="mb-16">
+        <div className="flex items-baseline justify-between mb-6">
+          <h3 className="font-serif text-xl font-light italic" style={{ color: '#1A1A1A' }}>
+            Cost Composition
+          </h3>
+          <div className="text-[10px] uppercase tracking-[0.3em]" style={{ color: '#8B8580' }}>
+            成本結構 · {formatCurrency(costTotal)}
+          </div>
+        </div>
+
+        {/* Hairline bar */}
+        <div className="flex h-1 mb-8" style={{ backgroundColor: '#F0EDE6' }}>
+          {breakdown.map((b, i) => {
+            const opacities = [1, 0.78, 0.6, 0.42, 0.24];
             return (
               <div
-                key={cat}
-                className="border-2 border-black -ml-0.5 -mt-0.5 px-4 py-2 flex items-center gap-3"
-                style={{ backgroundColor: bg, color: isLight ? '#0A0A0A' : '#FFFFFF' }}
-              >
-                <span className="text-xs font-black uppercase tracking-wider">{cat}</span>
-                <span className="text-lg font-black font-mono">{count}</span>
+                key={b.label}
+                className="h-full transition-all"
+                style={{
+                  width: `${(b.value / costTotal) * 100}%`,
+                  backgroundColor: '#1A1A1A',
+                  opacity: opacities[i],
+                }}
+                title={`${b.label}: ${formatCurrency(b.value)}`}
+              />
+            );
+          })}
+        </div>
+
+        {/* Legend - elegant grid */}
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+          {breakdown.map((b, i) => {
+            const opacities = [1, 0.78, 0.6, 0.42, 0.24];
+            return (
+              <div key={b.label} className="flex items-start gap-3">
+                <div
+                  className="w-2 h-2 mt-2 flex-shrink-0"
+                  style={{ backgroundColor: '#1A1A1A', opacity: opacities[i] }}
+                />
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-[0.2em]" style={{ color: '#8B8580' }}>
+                    {b.label}
+                  </div>
+                  <div className="font-serif text-lg font-light leading-tight mt-0.5" style={{ color: '#1A1A1A' }}>
+                    {((b.value / costTotal) * 100).toFixed(1)}<span className="text-xs italic">%</span>
+                  </div>
+                  <div className="text-[10px] mt-0.5" style={{ color: '#8B8580' }}>
+                    {b.cn}
+                  </div>
+                </div>
               </div>
             );
           })}
         </div>
       </div>
-    </div>
+
+      <div className="h-px mb-12" style={{ backgroundColor: '#E8E4DC' }} />
+
+      {/* Categories */}
+      <div>
+        <div className="flex items-baseline justify-between mb-6">
+          <h3 className="font-serif text-xl font-light italic" style={{ color: '#1A1A1A' }}>
+            Categories
+          </h3>
+          <div className="text-[10px] uppercase tracking-[0.3em]" style={{ color: '#8B8580' }}>
+            類別分佈
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-x-8 gap-y-4">
+          {[...categories.entries()].map(([cat, count]) => (
+            <div key={cat} className="flex items-baseline gap-2">
+              <span className="font-serif text-2xl font-light italic" style={{ color: '#B85432' }}>
+                {count}
+              </span>
+              <span className="text-xs tracking-wide" style={{ color: '#4A4A48' }}>
+                {cat}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
-interface CardProps {
-  label: string;
-  subLabel: string;
-  value: string;
-  unit?: string;
-  bg: string;
-  color: string;
-  shape: 'circle' | 'square' | 'triangle' | 'rect';
-}
-
-function Card({ label, subLabel, value, unit, bg, color, shape }: CardProps) {
+function Stat({ label, cn, value, suffix }: { label: string; cn: string; value: string; suffix?: string }) {
   return (
-    <div
-      className="relative p-5 border-r-2 border-b-2 border-black last:border-r-0 md:[&:nth-child(4)]:border-r-0 [&:nth-child(3)]:md:border-b-0 [&:nth-child(4)]:md:border-b-0 overflow-hidden min-h-[140px] flex flex-col justify-between"
-      style={{ backgroundColor: bg, color }}
-    >
-      {/* Geometric shape decoration */}
-      <div className="absolute top-3 right-3 opacity-90">
-        {shape === 'circle' && (
-          <div className="w-6 h-6 rounded-full border-2" style={{ borderColor: color }} />
-        )}
-        {shape === 'square' && (
-          <div className="w-6 h-6 border-2" style={{ borderColor: color }} />
-        )}
-        {shape === 'triangle' && (
-          <div
-            className="w-0 h-0"
-            style={{
-              borderLeft: '12px solid transparent',
-              borderRight: '12px solid transparent',
-              borderBottom: `20px solid ${color}`,
-            }}
-          />
-        )}
-        {shape === 'rect' && (
-          <div className="w-8 h-3 border-2" style={{ borderColor: color }} />
-        )}
+    <div>
+      <div className="text-[10px] uppercase tracking-[0.25em] mb-3" style={{ color: '#8B8580' }}>
+        {label}
       </div>
-
-      <div>
-        <div className="text-[10px] font-black uppercase tracking-[0.2em] opacity-90">{label}</div>
-        <div className="text-[10px] opacity-70 mt-0.5">{subLabel}</div>
+      <div className="font-serif text-5xl font-light leading-none tracking-tight" style={{ color: '#1A1A1A' }}>
+        {value}
+        {suffix && <span className="text-2xl ml-1 italic font-light" style={{ color: '#8B8580' }}>{suffix}</span>}
       </div>
-
-      <div className="flex items-baseline gap-1 mt-3">
-        <span className="text-3xl font-black tracking-tight leading-none">{value}</span>
-        {unit && <span className="text-sm font-bold opacity-80">{unit}</span>}
+      <div className="text-[10px] mt-3 tracking-wide" style={{ color: '#8B8580' }}>
+        {cn}
       </div>
     </div>
   );
