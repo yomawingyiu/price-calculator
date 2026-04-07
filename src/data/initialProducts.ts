@@ -1,4 +1,4 @@
-import type { Product, CostBreakdown, PricingConfig } from '../types';
+import type { Product, CostBreakdown } from '../types';
 
 function p(
   nameEn: string, nameCn: string, sku: string,
