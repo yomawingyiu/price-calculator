@@ -256,6 +256,12 @@ function ProductRow({ product: p, onEdit, onDelete }: { product: Product; onEdit
 
   const marginColor = margin >= 0.7 ? '#1A1A1A' : margin >= 0.5 ? '#C4923B' : '#B85432';
 
+  const hwItems = p.costs.hardwareItems?.length || 0;
+  const pkItems = p.costs.packagingItems?.length || 0;
+  const totalLinks =
+    (p.costs.hardwareItems?.filter(i => i.purchaseUrl).length || 0) +
+    (p.costs.packagingItems?.filter(i => i.purchaseUrl).length || 0);
+
   return (
     <tr
       className="border-b hover:bg-stone-50/50 transition-colors group"
@@ -265,7 +271,23 @@ function ProductRow({ product: p, onEdit, onDelete }: { product: Product; onEdit
         {p.category}
       </td>
       <td className="px-4 py-3">
-        <div className="font-medium text-sm" style={{ color: '#1A1A1A' }}>{p.nameCn}</div>
+        <div className="font-medium text-sm flex items-center gap-1.5" style={{ color: '#1A1A1A' }}>
+          {p.nameCn}
+          {(hwItems > 0 || pkItems > 0) && (
+            <span
+              className="text-[9px] px-1 rounded-sm font-mono tabular"
+              style={{ backgroundColor: '#F0EDE6', color: '#8B8580' }}
+              title={`${hwItems} hardware + ${pkItems} packaging items`}
+            >
+              {hwItems + pkItems}×
+            </span>
+          )}
+          {totalLinks > 0 && (
+            <span className="text-[10px]" title={`${totalLinks} purchase link${totalLinks > 1 ? 's' : ''}`}>
+              🔗
+            </span>
+          )}
+        </div>
         <div className="text-[11px] italic" style={{ color: '#8B8580' }}>{p.nameEn || '—'}</div>
       </td>
       <td className="px-4 py-3 font-mono tabular text-[11px]" style={{ color: '#8B8580' }}>{p.sku}</td>

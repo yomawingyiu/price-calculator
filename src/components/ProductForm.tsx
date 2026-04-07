@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { Product, CostBreakdown, PricingConfig, ProductCategory, LeatherType } from '../types';
-import { PRODUCT_CATEGORIES, LEATHER_TYPES, MULTIPLIERS, DISCOUNT_PRESETS, emptyCosts, defaultPricing } from '../types';
+import type { Product, CostBreakdown, PricingConfig, ProductCategory, LeatherType, LineItem } from '../types';
+import { PRODUCT_CATEGORIES, LEATHER_TYPES, MULTIPLIERS, DISCOUNT_PRESETS, emptyCosts, defaultPricing, sumLineItems, createLineItem } from '../types';
 import { materialCost, totalCost, retailPrice, discountedPrice, profitMargin, formatCurrency, formatPercent } from '../utils/calculations';
 
 interface Props {
@@ -204,37 +204,19 @@ export function ProductForm({ editProduct, onSave, onUpdate, onCancel }: Props) 
             </div>
           </div>
 
-          {/* Cost breakdown */}
+          {/* Basic costs: Labor & Shipping */}
           <div
             className="border rounded-sm p-5"
             style={{ borderColor: '#E8E4DC', backgroundColor: '#FFFFFF' }}
           >
-            <div className="label-xs mb-4">② Cost Breakdown · 成本明細</div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="label-xs mb-4">② Basic Costs · 基本成本</div>
+            <div className="grid grid-cols-2 gap-4">
               <Field label="Labor · 手工費" prefix="$">
                 <input
                   type="number" min="0" step="0.1"
                   value={costs.laborCost || ''}
                   placeholder="0"
                   onChange={e => updateCost('laborCost', e.target.value)}
-                  className="input-field"
-                />
-              </Field>
-              <Field label="Hardware · 五金" prefix="$">
-                <input
-                  type="number" min="0" step="0.1"
-                  value={costs.hardwareCost || ''}
-                  placeholder="0"
-                  onChange={e => updateCost('hardwareCost', e.target.value)}
-                  className="input-field"
-                />
-              </Field>
-              <Field label="Packaging · 包裝" prefix="$">
-                <input
-                  type="number" min="0" step="0.1"
-                  value={costs.packagingCost || ''}
-                  placeholder="0"
-                  onChange={e => updateCost('packagingCost', e.target.value)}
                   className="input-field"
                 />
               </Field>
@@ -250,6 +232,32 @@ export function ProductForm({ editProduct, onSave, onUpdate, onCancel }: Props) 
             </div>
           </div>
 
+          {/* Hardware items */}
+          <LineItemsCard
+            number="③"
+            titleEn="Hardware Items"
+            titleCn="五金配件明細"
+            items={costs.hardwareItems || []}
+            total={costs.hardwareCost || 0}
+            onChange={(items, total) =>
+              setCosts(prev => ({ ...prev, hardwareItems: items, hardwareCost: total }))
+            }
+            namePlaceholder="例：D扣、拉鏈、磁扣..."
+          />
+
+          {/* Packaging items */}
+          <LineItemsCard
+            number="④"
+            titleEn="Packaging Items"
+            titleCn="包裝物料明細"
+            items={costs.packagingItems || []}
+            total={costs.packagingCost || 0}
+            onChange={(items, total) =>
+              setCosts(prev => ({ ...prev, packagingItems: items, packagingCost: total }))
+            }
+            namePlaceholder="例：紙盒、緞帶、標籤..."
+          />
+
           {/* Leather cost */}
           {(isAppleLeather || isGoatLeather) && (
             <div
@@ -258,7 +266,7 @@ export function ProductForm({ editProduct, onSave, onUpdate, onCancel }: Props) 
             >
               <div className="flex items-baseline justify-between mb-4">
                 <div>
-                  <div className="label-xs mb-1">③ {isAppleLeather ? 'Apple Leather' : 'Italian Goatskin'} · 皮料</div>
+                  <div className="label-xs mb-1">⑤ {isAppleLeather ? 'Apple Leather' : 'Italian Goatskin'} · 皮料</div>
                   <div className="font-serif text-sm italic" style={{ color: '#8B8580' }}>{leatherType}</div>
                 </div>
                 <div
@@ -385,7 +393,7 @@ export function ProductForm({ editProduct, onSave, onUpdate, onCancel }: Props) 
               className="border rounded-sm p-5"
               style={{ borderColor: '#E8E4DC', backgroundColor: '#FFFFFF' }}
             >
-              <div className="label-xs mb-4">③ Other Material · 其他皮料</div>
+              <div className="label-xs mb-4">⑤ Other Material · 其他皮料</div>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Qty · 數量" suffix="ft²">
                   <input
@@ -414,7 +422,7 @@ export function ProductForm({ editProduct, onSave, onUpdate, onCancel }: Props) 
             className="border rounded-sm p-5"
             style={{ borderColor: '#E8E4DC', backgroundColor: '#FFFFFF' }}
           >
-            <div className="label-xs mb-4">④ Pricing Strategy · 定價策略</div>
+            <div className="label-xs mb-4">⑥ Pricing Strategy · 定價策略</div>
 
             <div className="mb-4">
               <div className="text-[10px] tracking-wider mb-2" style={{ color: '#8B8580' }}>
@@ -558,8 +566,23 @@ export function ProductForm({ editProduct, onSave, onUpdate, onCancel }: Props) 
 
               {/* Costs */}
               <div className="space-y-1.5">
-                <PreviewRow label="Material" cn="材料" value={formatCurrency(mat)} muted />
                 <PreviewRow label="Labor" cn="手工" value={formatCurrency(costs.laborCost)} muted />
+                <PreviewRow
+                  label={`Hardware${(costs.hardwareItems?.length || 0) > 0 ? ` (${costs.hardwareItems?.length})` : ''}`}
+                  cn="五金"
+                  value={formatCurrency(costs.hardwareCost)}
+                  muted
+                />
+                <PreviewRow
+                  label={`Packaging${(costs.packagingItems?.length || 0) > 0 ? ` (${costs.packagingItems?.length})` : ''}`}
+                  cn="包裝"
+                  value={formatCurrency(costs.packagingCost)}
+                  muted
+                />
+                <PreviewRow label="Leather" cn="皮料" value={formatCurrency((costs.leatherCostApple || 0) + (costs.leatherCostGoat || 0))} muted />
+                <PreviewRow label="Shipping" cn="運費" value={formatCurrency(costs.shippingCost)} muted />
+                <div className="h-px my-1" style={{ backgroundColor: '#F0EDE6' }} />
+                <PreviewRow label="Material" cn="材料小計" value={formatCurrency(mat)} muted />
                 <PreviewRow label="TOTAL COST" cn="總成本" value={formatCurrency(total)} bold />
               </div>
 
@@ -714,6 +737,203 @@ function PreviewRow({
       >
         {value}
       </span>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Line Items Card (used for Hardware + Packaging)
+// ═══════════════════════════════════════════════════════════════
+function LineItemsCard({
+  number, titleEn, titleCn, items, total, onChange, namePlaceholder,
+}: {
+  number: string;
+  titleEn: string;
+  titleCn: string;
+  items: LineItem[];
+  total: number;
+  onChange: (items: LineItem[], total: number) => void;
+  namePlaceholder: string;
+}) {
+  const recalc = (next: LineItem[]) => {
+    const sum = sumLineItems(next);
+    onChange(next, Math.round(sum * 100) / 100);
+  };
+
+  const addItem = () => {
+    recalc([...items, createLineItem()]);
+  };
+
+  const updateItem = (id: string, patch: Partial<LineItem>) => {
+    const next = items.map(it => (it.id === id ? { ...it, ...patch } : it));
+    recalc(next);
+  };
+
+  const removeItem = (id: string) => {
+    recalc(items.filter(it => it.id !== id));
+  };
+
+  const hasLegacyCost = items.length === 0 && total > 0;
+
+  const migrateLegacy = () => {
+    const legacy: LineItem = {
+      id: createLineItem().id,
+      name: '合計 · Total',
+      qty: 1,
+      unitPrice: total,
+      purchaseUrl: '',
+    };
+    recalc([legacy]);
+  };
+
+  return (
+    <div
+      className="border rounded-sm p-5"
+      style={{ borderColor: '#E8E4DC', backgroundColor: '#FFFFFF' }}
+    >
+      <div className="flex items-baseline justify-between mb-4 flex-wrap gap-2">
+        <div>
+          <div className="label-xs mb-1">
+            {number} {titleEn} · {titleCn}
+          </div>
+          <div className="text-[11px]" style={{ color: '#8B8580' }}>
+            {items.length === 0 ? 'No items yet · 尚未新增項目' : `${items.length} item${items.length > 1 ? 's' : ''}`}
+          </div>
+        </div>
+        <div className="flex items-baseline gap-3">
+          <div className="flex items-baseline gap-1">
+            <span className="label-xs">TOTAL</span>
+            <span className="font-mono tabular text-lg font-semibold" style={{ color: '#1A1A1A' }}>
+              {formatCurrency(total)}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Legacy migration notice */}
+      {hasLegacyCost && (
+        <div
+          className="p-3 rounded-sm mb-4 flex items-center justify-between gap-3 text-[11px]"
+          style={{ backgroundColor: '#F5EDE8', color: '#B85432' }}
+        >
+          <span>
+            ⚠ Legacy cost: <span className="font-mono tabular font-semibold">{formatCurrency(total)}</span>
+            <span className="ml-2 opacity-80">· 舊資料尚未拆分明細</span>
+          </span>
+          <button
+            type="button"
+            onClick={migrateLegacy}
+            className="text-[10px] tracking-wider underline whitespace-nowrap"
+            style={{ color: '#B85432' }}
+          >
+            CONVERT TO ITEM →
+          </button>
+        </div>
+      )}
+
+      {/* Items list */}
+      {items.length > 0 && (
+        <div className="space-y-2 mb-3">
+          {/* Header row */}
+          <div className="grid grid-cols-12 gap-2 px-2 pb-1 border-b" style={{ borderColor: '#F0EDE6' }}>
+            <div className="col-span-4 label-xs">Item · 項目</div>
+            <div className="col-span-1 label-xs text-center">Qty</div>
+            <div className="col-span-2 label-xs text-right">Unit $</div>
+            <div className="col-span-2 label-xs text-right">Subtotal</div>
+            <div className="col-span-2 label-xs">Purchase URL</div>
+            <div className="col-span-1"></div>
+          </div>
+
+          {items.map((item) => {
+            const subtotal = (item.qty || 0) * (item.unitPrice || 0);
+            return (
+              <div
+                key={item.id}
+                className="grid grid-cols-12 gap-2 items-center p-2 rounded-sm hover:bg-stone-50/50"
+                style={{ backgroundColor: '#FAFAF7' }}
+              >
+                {/* Name */}
+                <div className="col-span-4">
+                  <input
+                    type="text"
+                    value={item.name}
+                    placeholder={namePlaceholder}
+                    onChange={e => updateItem(item.id, { name: e.target.value })}
+                    className="input-field"
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  />
+                </div>
+                {/* Qty */}
+                <div className="col-span-1">
+                  <input
+                    type="number" min="0" step="1"
+                    value={item.qty || ''}
+                    placeholder="1"
+                    onChange={e => updateItem(item.id, { qty: parseFloat(e.target.value) || 0 })}
+                    className="input-field text-center"
+                  />
+                </div>
+                {/* Unit price */}
+                <div className="col-span-2">
+                  <div className="relative">
+                    <span
+                      className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px]"
+                      style={{ color: '#8B8580' }}
+                    >$</span>
+                    <input
+                      type="number" min="0" step="0.1"
+                      value={item.unitPrice || ''}
+                      placeholder="0"
+                      onChange={e => updateItem(item.id, { unitPrice: parseFloat(e.target.value) || 0 })}
+                      className="input-field text-right pl-5"
+                    />
+                  </div>
+                </div>
+                {/* Subtotal (computed) */}
+                <div className="col-span-2 text-right font-mono tabular text-sm font-semibold" style={{ color: '#1A1A1A' }}>
+                  {formatCurrency(subtotal)}
+                </div>
+                {/* URL */}
+                <div className="col-span-2">
+                  <div className="relative">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px]">🔗</span>
+                    <input
+                      type="url"
+                      value={item.purchaseUrl || ''}
+                      placeholder="https://..."
+                      onChange={e => updateItem(item.id, { purchaseUrl: e.target.value })}
+                      className="input-field pl-6 text-xs"
+                      style={{ fontFamily: 'JetBrains Mono, monospace' }}
+                    />
+                  </div>
+                </div>
+                {/* Delete */}
+                <div className="col-span-1 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => removeItem(item.id)}
+                    className="text-sm hover:bg-red-50 rounded-sm w-7 h-7 flex items-center justify-center transition-colors"
+                    style={{ color: '#B85432' }}
+                    title="Remove item"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Add button */}
+      <button
+        type="button"
+        onClick={addItem}
+        className="w-full py-2.5 border border-dashed rounded-sm text-[11px] tracking-wider hover:bg-stone-50 transition-colors"
+        style={{ borderColor: '#C7C0B8', color: '#8B8580' }}
+      >
+        + ADD ITEM · 新增項目
+      </button>
     </div>
   );
 }
