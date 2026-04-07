@@ -44,7 +44,7 @@ export function ProductList({ products, onEdit, onDelete }: Props) {
     else { setSortKey(key); setSortAsc(true); }
   };
 
-  const arrow = (key: SortKey) => sortKey === key ? (sortAsc ? ' ▲' : ' ▼') : '';
+  const arrow = (key: SortKey) => sortKey === key ? (sortAsc ? ' ↑' : ' ↓') : '';
 
   // Group by category
   const groups = useMemo(() => {
@@ -58,30 +58,35 @@ export function ProductList({ products, onEdit, onDelete }: Props) {
   }, [filtered]);
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="p-4 border-b flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-bold text-gray-800">產品列表</h2>
-        <span className="text-sm text-gray-500">({filtered.length} 項)</span>
+    <div className="border-2 border-black bg-white mt-6">
+      <div className="px-6 py-4 border-b-2 border-black flex flex-wrap items-center gap-4" style={{ backgroundColor: '#0A0A0A' }}>
+        <h2 className="text-sm font-black uppercase tracking-[0.2em] text-white">
+          Products / 產品列表
+        </h2>
+        <span className="text-xs font-mono text-white opacity-60">
+          [{filtered.length}]
+        </span>
         <input
-          placeholder="搜尋產品名稱、SKU..."
+          placeholder="SEARCH / 搜尋..."
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="ml-auto border border-gray-300 rounded px-3 py-1.5 text-sm w-64 focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
+          className="ml-auto border-2 border-white bg-black text-white placeholder-gray-500 px-3 py-2 text-xs uppercase tracking-wider w-72 font-mono focus:bg-white focus:text-black"
+          style={{ outline: 'none' }}
         />
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600">
+        <table className="w-full text-sm border-collapse">
+          <thead style={{ backgroundColor: '#F2EFE9' }} className="border-b-2 border-black">
             <tr>
               <Th onClick={() => toggleSort('category')}>類別{arrow('category')}</Th>
               <Th onClick={() => toggleSort('nameCn')}>產品名稱{arrow('nameCn')}</Th>
-              <th className="px-3 py-2 text-left font-medium">SKU</th>
+              <th className="px-3 py-3 text-left text-[10px] font-black uppercase tracking-widest">SKU</th>
               <Th onClick={() => toggleSort('totalCost')} align="right">總成本{arrow('totalCost')}</Th>
               <Th onClick={() => toggleSort('retailPrice')} align="right">零售價{arrow('retailPrice')}</Th>
-              <th className="px-3 py-2 text-right font-medium">折扣價</th>
+              <th className="px-3 py-3 text-right text-[10px] font-black uppercase tracking-widest">折扣價</th>
               <Th onClick={() => toggleSort('profitMargin')} align="right">利潤率{arrow('profitMargin')}</Th>
-              <th className="px-3 py-2 text-center font-medium">操作</th>
+              <th className="px-3 py-3 text-center text-[10px] font-black uppercase tracking-widest">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -102,9 +107,13 @@ export function ProductList({ products, onEdit, onDelete }: Props) {
 function CategoryGroup({ category, items, onEdit, onDelete }: { category: string; items: Product[]; onEdit: (p: Product) => void; onDelete: (id: string) => void }) {
   return (
     <>
-      <tr className="bg-amber-50">
-        <td colSpan={8} className="px-3 py-2 font-semibold text-amber-800 text-xs uppercase tracking-wider">
-          {category} ({items.length})
+      <tr>
+        <td colSpan={8} className="px-4 py-2 border-t-2 border-b-2 border-black" style={{ backgroundColor: '#F4C842' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3" style={{ backgroundColor: '#0A0A0A' }} />
+            <span className="text-xs font-black uppercase tracking-[0.2em]">{category}</span>
+            <span className="text-xs font-mono opacity-70">[{items.length}]</span>
+          </div>
         </td>
       </tr>
       {items.map(p => <ProductRow key={p.id} product={p} onEdit={onEdit} onDelete={onDelete} hideCategory />)}
@@ -118,26 +127,45 @@ function ProductRow({ product: p, onEdit, onDelete, hideCategory }: { product: P
   const disc = discountedPrice(price, p.pricing.discountRate);
   const margin = profitMargin(p.costs, p.pricing);
 
+  const marginColor = margin > 0.7 ? '#1D3557' : margin > 0.5 ? '#F4C842' : '#E63946';
+  const marginText = margin > 0.7 ? '#FFFFFF' : '#0A0A0A';
+
   return (
-    <tr className="border-t hover:bg-gray-50">
-      {!hideCategory && <td className="px-3 py-2 text-gray-500">{p.category}</td>}
-      {hideCategory && <td className="px-3 py-2" />}
-      <td className="px-3 py-2">
-        <div className="font-medium text-gray-800">{p.nameCn}</div>
-        <div className="text-xs text-gray-400">{p.nameEn}</div>
+    <tr className="border-b border-black/20 hover:bg-yellow-50/50 transition-colors">
+      {!hideCategory && <td className="px-3 py-3 text-xs uppercase tracking-wider">{p.category}</td>}
+      {hideCategory && <td className="px-3 py-3" />}
+      <td className="px-3 py-3">
+        <div className="font-bold text-black">{p.nameCn}</div>
+        <div className="text-xs text-gray-500 uppercase tracking-wide">{p.nameEn}</div>
       </td>
-      <td className="px-3 py-2 text-gray-500 font-mono text-xs">{p.sku}</td>
-      <td className="px-3 py-2 text-right">{formatCurrency(cost)}</td>
-      <td className="px-3 py-2 text-right font-medium">{formatCurrency(price)}</td>
-      <td className="px-3 py-2 text-right text-amber-700">{formatCurrency(disc)}</td>
-      <td className="px-3 py-2 text-right">
-        <span className={`px-2 py-0.5 rounded-full text-xs ${margin > 0.7 ? 'bg-green-100 text-green-700' : margin > 0.5 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>
+      <td className="px-3 py-3 font-mono text-xs text-gray-600">{p.sku}</td>
+      <td className="px-3 py-3 text-right font-mono text-sm">{formatCurrency(cost)}</td>
+      <td className="px-3 py-3 text-right font-mono font-bold text-sm">{formatCurrency(price)}</td>
+      <td className="px-3 py-3 text-right font-mono text-sm" style={{ color: '#E63946' }}>
+        {formatCurrency(disc)}
+      </td>
+      <td className="px-3 py-3 text-right">
+        <span
+          className="inline-block px-2 py-1 text-[10px] font-black border-2 border-black font-mono"
+          style={{ backgroundColor: marginColor, color: marginText }}
+        >
           {formatPercent(margin)}
         </span>
       </td>
-      <td className="px-3 py-2 text-center">
-        <button onClick={() => onEdit(p)} className="text-blue-600 hover:text-blue-800 text-xs mr-2">編輯</button>
-        <button onClick={() => onDelete(p.id)} className="text-red-500 hover:text-red-700 text-xs">刪除</button>
+      <td className="px-3 py-3 text-center">
+        <button
+          onClick={() => onEdit(p)}
+          className="text-[10px] font-black uppercase tracking-wider border-b-2 border-black hover:bg-yellow-200 px-1 mr-2"
+        >
+          編輯
+        </button>
+        <button
+          onClick={() => onDelete(p.id)}
+          className="text-[10px] font-black uppercase tracking-wider border-b-2 px-1"
+          style={{ borderColor: '#E63946', color: '#E63946' }}
+        >
+          刪除
+        </button>
       </td>
     </tr>
   );
@@ -147,7 +175,7 @@ function Th({ children, onClick, align }: { children: React.ReactNode; onClick?:
   return (
     <th
       onClick={onClick}
-      className={`px-3 py-2 font-medium cursor-pointer hover:bg-gray-100 select-none ${align === 'right' ? 'text-right' : 'text-left'}`}
+      className={`px-3 py-3 text-[10px] font-black uppercase tracking-widest cursor-pointer hover:bg-black hover:text-white select-none transition-colors ${align === 'right' ? 'text-right' : 'text-left'}`}
     >
       {children}
     </th>

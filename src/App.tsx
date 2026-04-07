@@ -31,13 +31,14 @@ function App() {
     <Layout>
       <Dashboard products={products} />
 
-      <div className="flex gap-3 mb-4">
+      <div className="flex gap-3 mb-6 items-center">
         {!showForm && (
           <button
             onClick={() => { setEditProduct(null); setShowForm(true); }}
-            className="px-5 py-2 text-sm bg-amber-700 text-white rounded hover:bg-amber-800 font-medium"
+            className="bh-btn px-6 py-3 text-xs font-black uppercase tracking-widest border-2 border-black"
+            style={{ backgroundColor: '#E63946', color: '#FFFFFF' }}
           >
-            + 新增產品
+            + New Product / 新增產品
           </button>
         )}
         <ExportButton products={products} onReset={resetToDefaults} />

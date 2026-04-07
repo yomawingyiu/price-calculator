@@ -1,9 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
+
+:root {
+  --bauhaus-red: #E63946;
+  --bauhaus-blue: #1D3557;
+  --bauhaus-yellow: #F4C842;
+  --bauhaus-black: #0A0A0A;
+  --bauhaus-cream: #F2EFE9;
+  --bauhaus-gray: #5C5C5C;
+}
 
 html, body {
   margin: 0;
   min-height: 100%;
-  background-color: #f9fafb;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #F2EFE9;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #0A0A0A;
   color-scheme: light;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv11";
+}
+
+.font-mono {
+  font-family: 'Space Mono', 'SF Mono', Monaco, monospace;
+}
+
+/* Remove default focus styles, add bauhaus-style focus */
+input:focus, select:focus, textarea:focus, button:focus {
+  outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #0A0A0A !important;
+  box-shadow: 3px 3px 0 #0A0A0A;
+}
+
+/* Bauhaus button hover */
+.bh-btn {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.bh-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 #0A0A0A;
+}
+.bh-btn:active {
+  transform: translate(0, 0);
+  box-shadow: 0 0 0 #0A0A0A;
+}
+
+/* Hide number input arrows */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
 }
